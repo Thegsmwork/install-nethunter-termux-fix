@@ -196,13 +196,30 @@ function verify_sha() {
 }
 
 function extract_rootfs() {
+    ROOTFS_DIR="${HOME}/rootfs"
     if [ -z $KEEP_CHROOT ]; then
         printf "\n${blue}[*] Extracting rootfs... ${reset}\n\n"
-        proot --link2symlink tar -xf $IMAGE_NAME 2> /dev/null || :
+        
+        # Ensure rootfs directory exists
+        if [ ! -d "${ROOTFS_DIR}" ]; then
+            mkdir -p "${ROOTFS_DIR}"
+        fi
+
+        # Extract rootfs into the specified directory
+        proot --link2symlink tar -xf $IMAGE_NAME -C "${ROOTFS_DIR}" 2> /dev/null || :
+
+        # Verify if extraction was successful
+        if [ $? -eq 0 ]; then
+            printf "${green}[+] Rootfs extracted successfully to ${ROOTFS_DIR}${reset}\n"
+        else
+            printf "${red}[!] Extraction failed. Please check the archive and try again.${reset}\n"
+            exit 1
+        fi
     else        
         printf "${yellow}[!] Using existing rootfs directory${reset}\n"
     fi
 }
+
 
 
 function create_launcher() {
